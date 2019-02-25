@@ -1,14 +1,14 @@
 import { Sprite, utils } from 'pixi.js';
-import Entity, { SPRITE_TYPES } from 'src/models/entity';
+import Entity, { SPRITE_TYPES } from 'src/models/Entity';
 import {
   MAP_WIDTH,
   MAP_HEIGHT,
   CELL_WIDHT_IN_PX,
   CELL_HEIGHT_IN_PX,
-  MAX_HORIZONTAL_CELL,
-  MAX_VERTICAL_CELL,
 } from 'src/constants';
 
+const MAX_HORIZONTAL_CELL = MAP_WIDTH / CELL_WIDHT_IN_PX;
+const MAX_VERTICAL_CELL = MAP_HEIGHT / CELL_HEIGHT_IN_PX;
 const cellTexture = 'cell.png';
 const allocatedCellTexture = 'allocatedCell.png';
 

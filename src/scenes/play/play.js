@@ -20,16 +20,19 @@ const OSModeToggleInterval = 7000;
 let dynamicViewMode = true;
 
 export default {
+  appState: null,
   container: null,
   map: null,
   cursors: [],
   isSafeMode: false,
 
-  setup (app) {
+  setup (app, state) {
+    this.appState = state;
     this.container = new Container();
     this.map = Map.instantiate(this.container);
 
     const cursorTicker = this.addNewCursor({
+      isPlayer: true,
       tint: 0xFBBC10,
       position: { x: 5000, y: 5000 },
       controller: {
@@ -69,8 +72,14 @@ export default {
 
     app.stage.addChild(this.container);
   },
-  addNewCursor ({ position, tint, controller }) {
+  addNewCursor ({
+    isPlayer,
+    position,
+    tint,
+    controller,
+  }) {
     const cursor = Cursor.instantiate(this.map, {
+      isPlayer,
       tint,
       position,
       direction: CURSOR_DIRECTION.UP,
@@ -112,10 +121,8 @@ export default {
     return colors[Math.floor(Math.random() * colors.length)];
   },
   toggleOSMode () {
-    const osModeElement = document.getElementById('os-mode');
-
     this.isSafeMode = !this.isSafeMode;
-    osModeElement.innerHTML = this.isSafeMode ? 'Safe Mode' : '-- Parttty Time --';
+    this.appState.osMode = this.isSafeMode ? 'Safe Mode' : 'Parttty Time';
   },
   allocateCurrentCell (cursor) {
     if (this.isAllocatedCell(cursor)) return;
@@ -144,13 +151,18 @@ export default {
       cursor.positionIndex.yIndex,
       { tint: cursor.tint },
     );
+
     cursor.allocatedCells.push(
       String([cursor.positionIndex.xIndex, cursor.positionIndex.yIndex]),
     );
+
+    if (cursor.isPlayer) {
+      this.appState.allocatedMemoryByBit = cursor.allocatedCells.length * 8;
+    }
   },
-  isAllocatedCell (cursor) {
-    return cursor.allocatedCells.includes(
-      String([cursor.positionIndex.xIndex, cursor.positionIndex.yIndex]),
+  isAllocatedCell ({ allocatedCells, positionIndex }) {
+    return allocatedCells.includes(
+      String([positionIndex.xIndex, positionIndex.yIndex]),
     );
   },
   updateCursorMode (cursor) {

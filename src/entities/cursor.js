@@ -1,4 +1,4 @@
-import Entity from 'src/models/entity';
+import Entity from 'src/models/Entity';
 
 const cursorTexture = 'cursor.png';
 const cursorAllocatedTexture = 'cursorInAllocatedCell.png';
