@@ -42,7 +42,7 @@ export default Entity({
   methods: {
     move (entity) {
       return {
-        to (destFn) {
+        to: (destFn) => {
           const position = entity.getPosition();
           const cell = CellIndex(position.x, position.y);
           const { xIndex, yIndex } = destFn(cell.xIndex, cell.yIndex);
@@ -55,6 +55,11 @@ export default Entity({
           const { x, y } = CellPosition(xIndex, yIndex);
 
           entity.move(x, y);
+
+          if (entity.states.isPlayer) {
+            this.position.x = window.innerWidth / 2 - entity.position.x;
+            this.position.y = window.innerHeight / 2 - entity.position.y;
+          }
 
           return true;
         },

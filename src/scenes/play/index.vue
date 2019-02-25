@@ -1,16 +1,28 @@
 <template>
   <div>
-    <div class='header'>
-      <div style='float:right'>
-        <p>KiB Mem <b>{{ allocatedMemoryByKiB }}</b></p>
-        <p>USER <b>{{ username }}</b></p>
+    <template v-if='!error'>
+      <div class='header'>
+        <div style='float:right'>
+          <p>KiB Mem <b>{{ allocatedMemoryByKiB }}</b></p>
+          <p>USER <b>{{ username }}</b></p>
+        </div>
+        <p>OS MODE <b>{{ osMode }}</b></p>
       </div>
-      <p>OS MODE <b>{{ osMode }}</b></p>
-    </div>
+      <div
+        v-show='!error'
+        id='os'
+        ref='container'
+      />
+    </template>
     <div
-      id='os'
-      ref='container'
-    />
+      v-else
+      class='error'
+    >
+      <p>:(</p>
+      <p v-text='error' />
+      <p>you crashed!</p>
+      <small>rebooting...</small>
+    </div>
   </div>
 </template>
 
@@ -27,6 +39,7 @@ export default {
   data () {
     return {
       app: null,
+      error: null,
       username: localStorage.getItem('username'),
       allocatedMemoryByBit: 0,
       osMode: 'Running ...',
@@ -36,6 +49,15 @@ export default {
   computed: {
     allocatedMemoryByKiB () {
       return (this.allocatedMemoryByBit / 1024).toFixed(3);
+    },
+  },
+  watch: {
+    error () {
+      if (this.allocatedMemoryByKiB > localStorage.getItem('highscore')) {
+        localStorage.setItem('highscore', this.allocatedMemoryByKiB);
+      }
+
+      setTimeout(() => this.$emit('scene', 'StartScene'), 3000);
     },
   },
   created () {
@@ -79,5 +101,9 @@ export default {
 .header * {
   display: inline;
   margin: 0 5px;
+}
+.error {
+  color: #f00;
+  text-align: center;
 }
 </style>

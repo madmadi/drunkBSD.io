@@ -88,7 +88,13 @@ const TerminalCommands = {
   highscore: {
     desc: 'print your high score',
     exec () {
-      return `no record found for ${this.username}`;
+      const highscore = localStorage.getItem('highscore');
+
+      if (!highscore) {
+        return `no record found for ${this.username}`;
+      }
+
+      return `highscore: killed while ${highscore}KiB memory was allocated`;
     },
   },
   logout: {

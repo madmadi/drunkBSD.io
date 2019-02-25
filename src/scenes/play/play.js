@@ -17,7 +17,8 @@ const CURSOR_VELOCITY = {
 };
 const OSModeToggleInterval = 7000;
 
-let dynamicViewMode = true;
+const ERROR_SEGMENTATION_FAULT = new Error('Segmentation Fault');
+
 
 export default {
   appState: null,
@@ -59,13 +60,6 @@ export default {
       }),
     );
     setInterval(() => Mousetrap.trigger(['j', 'k', 'i', 'l'][Math.round(Math.random() * 4)]), 900);
-
-    Mousetrap.bind('v', () => {
-      this.map.position.x = 0;
-      this.map.position.y = 0;
-      dynamicViewMode = !dynamicViewMode;
-    });
-
 
     this.toggleOSMode();
     setInterval(() => this.toggleOSMode(), OSModeToggleInterval);
@@ -131,6 +125,10 @@ export default {
       cursor.positionIndex.yIndex,
     )
       && this.isSafeMode) {
+      if (cursor.isPlayer) {
+        this.appState.error = ERROR_SEGMENTATION_FAULT;
+      }
+
       cursor.direction = -cursor.direction;
       return;
     }
@@ -220,12 +218,11 @@ export default {
     const { xIndex, yIndex } = CellIndex(x, y);
 
     if (isTouchedEdge) {
-      cursor.direction = -cursor.direction;
-    }
+      if (cursor.isPlayer) {
+        this.appState.error = ERROR_SEGMENTATION_FAULT;
+      }
 
-    if (dynamicViewMode) {
-      this.map.position.x = window.innerWidth / 2 - this.cursors[0].position.x;
-      this.map.position.y = window.innerHeight / 2 - this.cursors[0].position.y;
+      cursor.direction = -cursor.direction;
     }
 
     cursor.positionIndex.xIndex = xIndex;
