@@ -2,6 +2,10 @@ import { Container, ticker } from 'pixi.js';
 import Mousetrap from 'mousetrap';
 import Map, { CellIndex } from 'src/entities/map';
 import Cursor, { MODES } from 'src/entities/cursor';
+import {
+  CELL_WIDHT_IN_PX,
+  CELL_HEIGHT_IN_PX,
+} from 'src/constants';
 
 const CURSOR_DIRECTION = {
   NONE: 0,
@@ -11,9 +15,9 @@ const CURSOR_DIRECTION = {
   DOWN: 2,
 };
 const CURSOR_VELOCITY = {
-  SLOW: 0.02,
-  NORMAL: 0.1,
-  FAST: 0.4,
+  SLOW: 0.5,
+  NORMAL: 1,
+  FAST: 2,
 };
 const ERROR_SEGMENTATION_FAULT = new Error('Segmentation Fault');
 
@@ -94,27 +98,22 @@ export default {
       positionIndex: CellIndex(position.x, position.y),
       allocatedCells: [],
     });
-    let playTurn = 0;
 
     Mousetrap.bind(Object.keys(controller), (event, key) => {
       cursor.direction = controller[key];
     });
 
+    if (cursor.isPlayer) {
+      Mousetrap.bind('shift', () => {
+        this.map.move(cursor).align();
+      });
+    }
+
 
     this.cursors.push(cursor);
 
     return () => {
-      if (playTurn < 1) {
-        playTurn += cursor.velocity;
-        return;
-      }
-
-      playTurn = 0;
-
-      this.allocateCurrentCell(cursor);
       this.moveCursor(cursor);
-      this.updateCursorVelocity(cursor);
-      this.updateCursorMode(cursor);
     };
   },
   getRandomColor () {
@@ -139,7 +138,7 @@ export default {
     )
       && this.isSafeMode) {
       if (cursor.isPlayer) {
-        this.appState.error = ERROR_SEGMENTATION_FAULT;
+        // this.appState.error = ERROR_SEGMENTATION_FAULT;
       }
 
       cursor.direction = -cursor.direction;
@@ -207,22 +206,22 @@ export default {
       case CURSOR_DIRECTION.LEFT:
         isTouchedEdge = !this.map
           .move(cursor)
-          .to((xIndex, yIndex) => ({ xIndex: xIndex - 1, yIndex }));
+          .to((x, y) => ({ x: x - cursor.velocity, y }));
         break;
       case CURSOR_DIRECTION.RIGHT:
         isTouchedEdge = !this.map
           .move(cursor)
-          .to((xIndex, yIndex) => ({ xIndex: xIndex + 1, yIndex }));
+          .to((x, y) => ({ x: x + cursor.velocity, y }));
         break;
       case CURSOR_DIRECTION.UP:
         isTouchedEdge = !this.map
           .move(cursor)
-          .to((xIndex, yIndex) => ({ xIndex, yIndex: yIndex - 1 }));
+          .to((x, y) => ({ x, y: y - cursor.velocity }));
         break;
       case CURSOR_DIRECTION.DOWN:
         isTouchedEdge = !this.map
           .move(cursor)
-          .to((xIndex, yIndex) => ({ xIndex, yIndex: yIndex + 1 }));
+          .to((x, y) => ({ x, y: y + cursor.velocity }));
         break;
       default:
     }
@@ -236,6 +235,13 @@ export default {
       }
 
       cursor.direction = -cursor.direction;
+    }
+
+    if ((cursor.position.x % CELL_WIDHT_IN_PX) < 1
+      || (cursor.position.y % CELL_HEIGHT_IN_PX) < 1) {
+      this.updateCursorVelocity(cursor);
+      this.updateCursorMode(cursor);
+      this.allocateCurrentCell(cursor);
     }
 
     cursor.positionIndex.xIndex = xIndex;

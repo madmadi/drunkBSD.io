@@ -7,15 +7,15 @@ import {
   CELL_HEIGHT_IN_PX,
 } from 'src/constants';
 
-const MAX_HORIZONTAL_CELL = MAP_WIDTH / CELL_WIDHT_IN_PX;
-const MAX_VERTICAL_CELL = MAP_HEIGHT / CELL_HEIGHT_IN_PX;
+// const MAX_HORIZONTAL_CELL = MAP_WIDTH / CELL_WIDHT_IN_PX;
+// const MAX_VERTICAL_CELL = MAP_HEIGHT / CELL_HEIGHT_IN_PX;
 const cellTexture = 'cell.png';
 const allocatedCellTexture = 'allocatedCell.png';
 
 export function CellIndex (x, y) {
   return {
-    xIndex: Math.floor(x / CELL_WIDHT_IN_PX),
-    yIndex: Math.floor(y / CELL_HEIGHT_IN_PX),
+    xIndex: Math.round(x / CELL_WIDHT_IN_PX),
+    yIndex: Math.round(y / CELL_HEIGHT_IN_PX),
   };
 }
 
@@ -45,15 +45,12 @@ export default Entity({
       return {
         to: (destFn) => {
           const position = entity.getPosition();
-          const cell = CellIndex(position.x, position.y);
-          const { xIndex, yIndex } = destFn(cell.xIndex, cell.yIndex);
+          const { x, y } = destFn(position.x, position.y);
 
-          if (xIndex < 0 || xIndex >= MAX_HORIZONTAL_CELL
-            || yIndex < 0 || yIndex >= MAX_VERTICAL_CELL) {
+          if (x < 0 || x >= MAP_WIDTH
+            || y < 0 || y >= MAP_HEIGHT) {
             return false;
           }
-
-          const { x, y } = CellPosition(xIndex, yIndex);
 
           entity.move(x, y);
 
@@ -63,6 +60,13 @@ export default Entity({
           }
 
           return true;
+        },
+        align: () => {
+          const position = entity.getPosition();
+          const { xIndex, yIndex } = CellIndex(position.x, position.y);
+
+          const { x, y } = CellPosition(xIndex, yIndex);
+          entity.move(x, y);
         },
       };
     },
