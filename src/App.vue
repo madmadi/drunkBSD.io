@@ -16,7 +16,7 @@ export default {
   },
   data () {
     return {
-      scene: 'StartScene',
+      scene: DEBUG ? 'PlayScene' : 'StartScene',
     };
   },
   methods: {

@@ -31,6 +31,7 @@ export default Entity({
   sprite: {},
   spriteType: SPRITE_TYPES.TILING,
   states: {
+    position: { x: 0, y: 0 },
     allocatedCells: [],
   },
 
@@ -56,7 +57,7 @@ export default Entity({
 
           entity.move(x, y);
 
-          if (entity.states.isPlayer) {
+          if (entity.isPlayer) {
             this.position.x = window.innerWidth / 2 - entity.position.x;
             this.position.y = window.innerHeight / 2 - entity.position.y;
           }

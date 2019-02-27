@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js';
+import { Container, ticker } from 'pixi.js';
 import Mousetrap from 'mousetrap';
 import Map, { CellIndex } from 'src/entities/map';
 import Cursor, { MODES } from 'src/entities/cursor';
@@ -11,18 +11,20 @@ const CURSOR_DIRECTION = {
   DOWN: 2,
 };
 const CURSOR_VELOCITY = {
-  SLOW: 0.2,
-  NORMAL: 0.7,
-  FAST: 2,
+  SLOW: 0.02,
+  NORMAL: 0.1,
+  FAST: 0.4,
 };
-const OSModeToggleInterval = 7000;
-
 const ERROR_SEGMENTATION_FAULT = new Error('Segmentation Fault');
+
+const OSModeToggleIntervalMS = 7000;
+let OSModeToggleInterval = null;
 
 
 export default {
   appState: null,
   container: null,
+  ticker: null,
   map: null,
   cursors: [],
   isSafeMode: false,
@@ -30,7 +32,10 @@ export default {
   setup (app, state) {
     this.appState = state;
     this.container = new Container();
+    this.ticker = new ticker.Ticker();
     this.map = Map.instantiate(this.container);
+
+    this.cursors = [];
 
     const cursorTicker = this.addNewCursor({
       isPlayer: true,
@@ -44,10 +49,10 @@ export default {
       },
     });
 
-    app.ticker.add(cursorTicker);
+    this.ticker.add(cursorTicker);
 
     // add a random bot
-    app.ticker.add(
+    this.ticker.add(
       this.addNewCursor({
         tint: 0xEA4335,
         position: { x: 6000, y: 5000 },
@@ -59,12 +64,20 @@ export default {
         },
       }),
     );
-    setInterval(() => Mousetrap.trigger(['j', 'k', 'i', 'l'][Math.round(Math.random() * 4)]), 900);
+    setInterval(() => Mousetrap.trigger(['j', 'k', 'i', 'l'][Math.round(Math.random() * 4)]), 400);
 
     this.toggleOSMode();
-    setInterval(() => this.toggleOSMode(), OSModeToggleInterval);
+    OSModeToggleInterval = setInterval(() => this.toggleOSMode(), OSModeToggleIntervalMS);
 
     app.stage.addChild(this.container);
+    this.ticker.start();
+  },
+  destroy () {
+    this.container.parent.removeChild(this.container);
+    this.container.destroy();
+    this.ticker.stop();
+
+    clearInterval(OSModeToggleInterval);
   },
   addNewCursor ({
     isPlayer,
@@ -81,7 +94,7 @@ export default {
       positionIndex: CellIndex(position.x, position.y),
       allocatedCells: [],
     });
-    let playTurn = 10;
+    let playTurn = 0;
 
     Mousetrap.bind(Object.keys(controller), (event, key) => {
       cursor.direction = controller[key];
@@ -91,12 +104,12 @@ export default {
     this.cursors.push(cursor);
 
     return () => {
-      if (playTurn > 0) {
-        playTurn -= cursor.velocity;
+      if (playTurn < 1) {
+        playTurn += cursor.velocity;
         return;
       }
 
-      playTurn = 10;
+      playTurn = 0;
 
       this.allocateCurrentCell(cursor);
       this.moveCursor(cursor);

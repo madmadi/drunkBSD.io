@@ -56,7 +56,6 @@
           type='text'
           class='command__input'
           maxlength='50'
-          autofocus
           @keyup.enter='exec'
         >
       </div>
@@ -66,6 +65,18 @@
 
 <script>
 const USERNAME_GUEST = 'guest';
+
+const ExecutableFiles = {
+  './program': function program () {
+    if (this.isGuestUser) {
+      return 'Be sure to set your username using `su` command, `help` for more info';
+    }
+
+    this.$emit('scene', 'PlayScene');
+
+    return 'program is running';
+  },
+};
 
 const TerminalCommands = {
   su: {
@@ -155,22 +166,23 @@ export default {
       return this.$root.version;
     },
   },
+  mounted () {
+    this.$refs.command.focus();
+  },
   methods: {
     exec () {
       const [command, ...args] = this.command.split(' ');
       let result = `command not found: ${this.command}`;
 
-      if (command === './program') {
-        this.goToPlay();
-        return;
-      }
-
-      if (TerminalCommands[command]) {
+      if (ExecutableFiles[command]) {
+        result = ExecutableFiles[command].call(this, args.join(' ')) || '';
+      } else if (TerminalCommands[command]) {
         result = TerminalCommands[command].exec.call(this, args.join(' ')) || '';
       }
 
-      result = result.replace(/\n/g, '<br>');
-
+      this.output(result.replace(/\n/g, '<br>'));
+    },
+    output (result) {
       this.executedCommands.push({
         id: this.executedCommands.length,
         text: this.command,
@@ -180,17 +192,10 @@ export default {
       this.command = '';
 
       this.$nextTick(() => {
-        this.$refs.terminal.scrollTop = this.$refs.terminal.scrollHeight;
+        if (this.$refs.terminal) {
+          this.$refs.terminal.scrollTop = this.$refs.terminal.scrollHeight;
+        }
       });
-    },
-    goToPlay () {
-      if (this.isGuestUser) {
-        return 'Be sure to set your username using `su` command, `help` for more info';
-      }
-
-      this.$emit('scene', 'PlayScene');
-
-      return true;
     },
   },
 };
@@ -228,6 +233,9 @@ export default {
   color: inherit;
   background-color: transparent;
   border: none;
+}
+.command__input:focus {
+  outline: none;
 }
 .description,
 .result {

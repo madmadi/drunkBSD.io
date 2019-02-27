@@ -1,5 +1,5 @@
 {
-  "name": "drunkBSD.io",
+  "name": "drunkbsd.io",
   "version": "1.0.0",
   "description": "A simple MMOG that occures in a RAM of corrupted branch of BSD OS",
   "main": "webpack.config.js",

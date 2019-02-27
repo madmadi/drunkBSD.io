@@ -30,7 +30,7 @@
 import { Application, loader } from 'pixi.js';
 import textureAtlas from 'src/assets/sprites/spritesheet.json';
 import { MAP_BACKGROUND_COLOR_HEX } from 'src/constants';
-import gameLogic from './play';
+import game from './play';
 import 'src/assets/sprites/spritesheet.png';
 
 
@@ -69,15 +69,24 @@ export default {
     });
   },
   mounted () {
+    this.isLoading = true;
+
     this.$refs.container.appendChild(this.app.view);
 
-    loader
-      .add(textureAtlas)
-      .load(this.onReady);
+    if (!loader.resources[textureAtlas]) {
+      loader
+        .add(textureAtlas)
+        .load(this.play);
+    } else {
+      this.play();
+    }
+  },
+  destroyed () {
+    game.destroy();
   },
   methods: {
-    onReady () {
-      gameLogic.setup(this.app, this.$data);
+    play () {
+      game.setup(this.app, this.$data);
       this.isLoading = false;
     },
   },

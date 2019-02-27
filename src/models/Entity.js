@@ -51,7 +51,8 @@ const Entity = {
 
     validateProps(states, { ...context, ...context.methods });
 
-    context.states = Object.create(this.states);
+    context.states = JSON.parse(JSON.stringify(this.states));
+    Object.setPrototypeOf(context.states, Entity.states);
 
     // add initial states
     Object.assign(context.states, states);
@@ -64,7 +65,9 @@ const Entity = {
     }
     Object.assign(context, {
       get position () { return context.sprite.position; },
-      set position ({ x, y }) { context.sprite.position.set(x, y); },
+      set position ({ x, y }) {
+        context.sprite.position.set(x, y);
+      },
     });
 
     if (typeof context.setup === 'function') {
@@ -108,8 +111,10 @@ export default function (entity) {
   validateProps(entity.methods, { ...entity, ...entity.state }, true);
 
   Object.setPrototypeOf(entity, Entity);
+  Object.setPrototypeOf(entity.methods, Entity.methods);
 
-  linkProps(entity.states, entity);
+  linkProps(Entity.states, entity);
+  linkProps(Entity.methods, entity);
   linkProps(entity.methods, entity);
 
   return entity;

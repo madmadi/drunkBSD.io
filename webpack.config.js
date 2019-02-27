@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HTMLWebpackPlugin = require('html-webpack-plugin');
@@ -7,6 +8,26 @@ const isProd = process.env.NODE_ENV === 'production';
 
 module.exports = {
   mode: isProd ? 'production' : 'development',
+  entry: {
+    vendor: ['pixi.js', 'vue', 'mousetrap'],
+    main: 'src/index',
+  },
+  output: {
+    filename: '[name].[hash].js',
+  },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          chunks: 'initial',
+          name: 'vendor',
+          test: 'vendor',
+          filename: 'vendor.[contenthash].js',
+          enforce: true,
+        },
+      },
+    },
+  },
   module: {
     rules: [
       {
@@ -41,10 +62,16 @@ module.exports = {
     extensions: ['.js', '.vue'],
   },
   plugins: [
+    new webpack.DefinePlugin({
+      DEBUG: JSON.stringify(!isProd),
+    }),
     new VueLoaderPlugin(),
-    new MiniCssExtractPlugin(),
+    new MiniCssExtractPlugin({
+      filename: '[name].[hash].css',
+    }),
     new HTMLWebpackPlugin({
       template: 'src/index.html',
+      favicon: 'src/assets/favicon.ico',
     }),
   ],
 };
